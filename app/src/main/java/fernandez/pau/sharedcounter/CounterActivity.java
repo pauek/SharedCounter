@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -20,6 +21,10 @@ public class CounterActivity extends AppCompatActivity {
     private FirebaseDatabase db;
     private DatabaseReference counter;
     private ValueEventListener counterListener;
+    private EditText lastname;
+    private EditText name;
+    private ValueEventListener personListener;
+    private DatabaseReference person;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +32,12 @@ public class CounterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_counter);
 
         counterview = (TextView) findViewById(R.id.counter);
+        name        = (EditText) findViewById(R.id.name);
+        lastname    = (EditText) findViewById(R.id.lastname);
 
         db = FirebaseDatabase.getInstance();
         counter = db.getReference("counter");
+        person = db.getReference("person");
     }
 
     @Override
@@ -47,12 +55,36 @@ public class CounterActivity extends AppCompatActivity {
             }
         };
         counter.addValueEventListener(counterListener);
+
+        personListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Person p = dataSnapshot.getValue(Person.class);
+                name.setText(p.name);
+                lastname.setText(p.lastname);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+        person.addValueEventListener(personListener);
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         counter.removeEventListener(counterListener);
+        person.removeEventListener(personListener);
+    }
+
+    public void reset(View view) {
+        counter.setValue(0);
+    }
+
+    public void savePerson(View view) {
+        person.setValue(new Person(name.getText().toString(), lastname.getText().toString()));
     }
 
     public void sumarUn(View view) {
@@ -93,7 +125,5 @@ public class CounterActivity extends AppCompatActivity {
         });
     }
 
-    public void reset(View view) {
-        counter.setValue(0);
-    }
+
 }
